@@ -31,6 +31,16 @@ Todas as etapas de codificação foram realizadas no __R Studio__ e sua posterio
 
 ## 3. Extração e limpeza de dados
 
+Inicialmente, deve-se carregar e instalar, se necessário, as seguintes bibliotecas:
+
+```
+#Carregando bibliotecas necessárias
+library(readr)
+library(dplyr)
+library(car)
+library(ggpubr)
+```
+
 Os dados foram obtidos no seguinte [link](https://dados.gov.br/dados/conjuntos-dados/indice-geral-de-reclamacoes---igr-metodologia-ate-2022). Foi selecionado o intervalo de cinco anos entre 2015 e 2020 para esta avaliação. Os dados correspondem ao Índice Geral de Reclamação; que correspondem ao nível de insatisfação dos clientes com a empresa em determinado mês, onde o valor 0 (zero) representa "nenhuma insatisfação".
 
 ```
@@ -154,7 +164,7 @@ in
 
 ```
 
-Importando o arquivo Medidas_ANS.xlsx; foram criadas duas consultas, a partir de suas: "Mês" e "Ano". Nestas consultas foram realizadas como tratamento apenas a adequação do tipo de dado e a promoção de cabeçalhos.
+Importando o arquivo Medidas_ANS.xlsx; foram criadas duas consultas: "Mês" e "Ano". Nestas consultas foram realizadas como tratamento apenas a adequação do tipo de dado e a promoção de cabeçalhos.
 
 ```
 
@@ -288,7 +298,7 @@ summary(modelo)
 
 ```
 
-Resultado: Para este projeto será considerado como significativo um teste cujo valor de p seja inferior à __0,05%__. Como pode se observar, o valor de p encontra-se em um nível de signifância muito inferior a 0,05%, e que, assim, pelo menos um dos pares de meses apresenta diferença entre suas médias no IGR.
+Resultado: Para este projeto será considerado como significativo um teste cujo valor de p seja inferior à __0,05%__ (representado na figura sob a coluna pr(>F)). Como pode se observar, o valor de p encontra-se em um nível de significância muito inferior a 0,05%, e que, assim, pelo menos um dos pares de meses apresenta diferença entre suas médias no IGR.
 
 ![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss6.png)
 
@@ -308,7 +318,7 @@ Resultado: Após exportar para um formato possível de ler no excel, através do
 
 ![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss7.png)
 
-Ao avaliar a interssecionalidade dos pares que apresentam diferença entre si e os que não apresentam, distribuí os meses em três grupos: __A__, __AB__ e __B__. O grupo A corresponde aos meses em que há menos reclamações no ano; o grupo AB representam meses intermediários, podendo se diferenciar tanto de alguns meses do grupo A quanto de B e o grupo B correspondem aos meses de maiores índices de reclamação no ano, conforme visto na tabela a seguir:
+Ao avaliar a interssecionalidade dos pares que apresentam diferença entre si e os que não apresentam, distribuí os meses em três grupos: __A__, __AB__ e __B__. O grupo A corresponde aos meses em que há menos reclamações no ano; o grupo AB representam meses intermediários, podendo se diferenciar tanto de alguns meses do grupo A quanto de B. Por último, o grupo B corresponde aos meses de maiores índices de reclamação no ano, conforme visto na tabela a seguir:
 
 | Mês              | Grupo |
 |------------------|-------|
@@ -331,9 +341,6 @@ Ao avaliar a interssecionalidade dos pares que apresentam diferença entre si e 
 Para visualizar com mais clareza o comportamento dos valores médios avaliados na análise estatística, elaborei um gráfico em colunas através do RStudio que evidenciasse os três grupos detectados, plotados juntos de seus respectivos intervalos de confiança (95%).
 
 ```
-#avaliar os pares que diferenciam a nivel de significancia = 95%
--excel-
-
 ##criando intervalo de confiança (95%)
 
 fatores <- unique(df.anova$mes)
@@ -357,7 +364,7 @@ names(data.bp) <- c('meses', 'media', 'lower', 'upper')
 head(data.bp)
 
 
-#convetendo a coluna "Meses" de texto para fator
+#convertendo a coluna "Meses" de texto para fator
 
 data.bp$meses<-factor(data.bp$meses, levels = c("Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"))
 #a primeira coluna perde seus dados originais, apesar dos fatores estarem ordenados. deve-se agora substituir os NA com os valores de rótulo adequados
@@ -393,3 +400,18 @@ O resultado observado encontra-se a seguir:
 
 ![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss8.png)
 
+
+------
+## 7. Discussão crítica e conclusão
+
+O teste de diferença de média para os meses do ano indicou a existência de dois grupos distintos e um misto, ao contrário da suposição inicial de que haveriam dois grupos totalmente distintos. Estes resultados consideraram um universo de 61.920 observações, o que assegura que a diferença detectada, apesar do intervalo curto (o grupo A varia no índice IGR médio entre 1.3 e 1.35, enquanto o grupo B encontra-se na faixa de 1.45), é significativa dado o enorme número amostral. É seguro afirmar que os meses de Agosto, Setembro e Outubro representam uma janela anual de oportunidades.
+
+Ao avaliar o primeiro _dashboard_, percebe-se que embora o somatório dos valores no índice IGR sejam elevados para o mês de novembro, isto não significou que a média de sua distribuição o manteve no grupo B. De forma similar, o somatório do mês de março, apesar de similar ao mês de julho, não o manteve no grupo intermediário AB.
+
+Também no _dashboard_ inicial é visível uma tendência de aumento a cada ano que passa ao considerar o somatório do IGR das empresas, o que pode ser um indicativo de um nicho de mercado atual ou futuro para esta área.
+
+As empresas de porte pequeno representam 59% do universo amostral deste projeto e respondem por aproximadamente 50% dos somatórios dos IGR para todos os meses, o que seria esperado. No entanto, apesar das empresas de grande porte representarem apenas 11% do universo amostral, estas respondem por 25% das reclamações dos usuários. Isto é um indicativo de que, apesar destas redes serem menos numerosas, a quantidade de problemas que levam a reclamações posteriores é proporcionalmente alta, um indicativo de que estas seriam as melhores opções para captação de clientes ou casos. 
+
+Esta proporção está representada no segundo dashboard, onde se observa que no ranking das empresas que mais receberam reclamações, as empresas de grande porte aparecem mais do que as de porte intermediário, ocupando a primeira e a sétima posição; onde a maioria das posições é ocupada pelas empresas de pequeno porte e apenas uma de porte intermediário se destaca.
+
+Por fim, vale ressaltar a importância da adoção de uma cultura __data-driven__ na tomada de decisões que requerem recursos de qualquer organização que busque atingir o sucesso em estratégias de médio e longo prazo.
