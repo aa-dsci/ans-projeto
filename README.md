@@ -4,9 +4,9 @@
 
 - __Descrição__: Projeto criado para retratar uma situação hipotética,mas, factível de uma análise de negócios utilizando o registro de reclamações dos usuários junto à ANS.
 - __Objetivos__: Fornecer insights para atuação de um escritório de advocacia que busca adentrar no ramo hospitalar. As perguntas a serem respondidas são:
-    - Considerando as reclamações como proxy de potenciais casos; há alguma tendência ao longo dos anos que justifique investimento no setor hospitalar?
+    - Considerando o Índice Geral de Reclamações (IGR) s como proxy de potenciais casos; há alguma tendência ao longo dos anos que justifique investimento no setor hospitalar?
     - Há indicativo de alguma categoria de empresa no setor que precise de maior investimento?
-    - Há alguma sazonalidade no ano em que o número de reclamações é maior ou menor?
+    - Há alguma sazonalidade no número de reclamações?
 
 ----
 ## 1. Introdução
@@ -18,7 +18,7 @@ __Etapas do projeto:__
 - Extração e limpeza de dados
 - Análise exploratória
 - Análise estatística
-- Produtos
+- Produto
 - Discussão crítica e conclusão
 
 ----
@@ -178,4 +178,218 @@ in
 
 ```
 
-Após as primeiras visualizações, os seguintes Dashboards foram elaborados:
+Após as primeiras visualizações, os seguintes _Dashboards_ foram elaborados:
+![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss3.png)
+
+![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss4.png)
+
+Após as primeiras visualizações, é possível observar as seguintes tendências:
+- Crescimento de reclamações ao longo dos anos
+- Empresas de pequeno porte são as que mais possuem número de reclamações
+- A princípio existem dois níveis de flutuação no ano do número de reclamações
+
+Considerando os objetivos deste projeto e as tendências detectadas, percebi que avaliar a flutuação do IGR ao longo do ano exigiriam uma análise estatística para compreender se há diferença significativa entre os meses, e se é possível agrupá-los em blocos.
+
+-----
+## 5. Análise estatística
+
+Considerando o [primeiro Dashboard](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss3.png), é possível que haja dois grupos distintos: o primeiro que representa um período em que há mais reclamações, e portanto, oportunidades de negócios, e um outro momento mais "calmo". Os meses entre Julho e Novembro apresentam os maiores IGR quando comparado com Dezembro - Junho. Uma forma de verificar se ocorre esta diferença é por meio de uma análise de variância (ANOVA) considerando as médias, ou um teste não-paramétrico correspondente para a sua mediana.
+
+A hipótese nula a ser testada é de que não há diferença entre os meses, enquanto a hipótese alternativa diz o contrário. Caso a hipótese alternativa seja acatada, será aplicado um teste _post-hoc_ que indicará quais pares de meses apresentam diferença entre si.
+
+Como dito, a ANOVA avalia se há diferença entre as médias de diferentes grupos. Neste caso, cada mês representará um grupo.
+
+Variáveis obtidas por processo de contagem não tem variância constante nem distribuição normal, como é o caso do número médio de reclamações ao longo dos meses.
+No entanto, os dados originais podem ser transformados para que esta análise ocorra de forma robusta. Entre os principais desafios desta análise, cabe a grande quantidade de valores 0 (zero) e a decisão entre um método paramétrico ou não-paramétrico.
+
+Para preparar o dataframe em que será aplicado o teste de diferenças, recorri ao R.
+
+```
+
+
+#extrair as colunas de cada mês em um dataframe e converter em um vetor único.
+
+jan<-subset(IGR_editado, select = c("jan.15","jan.16","jan.17","jan.18","jan.19","jan.20"))
+jan<-as.vector(t(jan))
+
+fev<-subset(IGR_editado, select = c("fev.15","fev.16","fev.17","fev.18","fev.19","fev.20"))
+fev<-as.vector(t(fev))
+
+mar<-subset(IGR_editado, select = c("mar.15","mar.16","mar.17","mar.18","mar.19","mar.20"))
+mar<-as.vector(t(mar))
+
+abr<-subset(IGR_editado, select = c("abr.15","abr.16","abr.17","abr.18","abr.19","abr.20"))
+abr<-as.vector(t(abr))
+
+mai<-subset(IGR_editado, select = c("mai.15","mai.16","mai.17","mai.18","mai.19","mai.20"))
+mai<-as.vector(t(mai))
+
+jun<-subset(IGR_editado, select = c("jun.15","jun.16","jun.17","jun.18","jun.19","jun.20"))
+jun<-as.vector(t(jun))
+
+jul<-subset(IGR_editado, select = c("jul.15","jul.16","jul.17","jul.18","jul.19","jul.20"))
+jul<-as.vector(t(jul))
+
+ago<-subset(IGR_editado, select = c("ago.15","ago.16","ago.17","ago.18","ago.19","ago.20"))
+ago<-as.vector(t(ago))
+
+set<-subset(IGR_editado, select = c("set.15","set.16","set.17","set.18","set.19","set.20"))
+set<-as.vector(t(set))
+
+out<-subset(IGR_editado, select = c("out.15","out.16","out.17","out.18","out.19","out.20"))
+out<-as.vector(t(out))
+
+nov<-subset(IGR_editado, select = c("nov.15","nov.16","nov.17","nov.18","nov.19","nov.20"))
+nov<-as.vector(t(nov))
+
+dez<-subset(IGR_editado, select = c("dez.15","dez.16","dez.17","dez.18","dez.19","dez.20"))
+dez<-as.vector(t(dez))
+
+#Para analisar dados de contagem, recomenda-se extrair a raiz quadrada  e somar em 0,5 para cada observação. Essa nova variável tem, em geral, variância constante.
+
+jan<-sqrt(jan)+0.5
+fev<-sqrt(fev)+0.5
+mar<-sqrt(mar)+0.5
+abr<-sqrt(abr)+0.5
+mai<-sqrt(mai)+0.5
+jun<-sqrt(jun)+0.5
+jul<-sqrt(jul)+0.5
+ago<-sqrt(ago)+0.5
+set<-sqrt(set)+0.5
+out<-sqrt(out)+0.5
+nov<-sqrt(nov)+0.5
+dez<-sqrt(dez)+0.5
+
+#criar um novo dataframe unindo todos os vetores de meses
+
+meses<-data.frame(jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez)
+
+rotulo_m<-c("janeiro","fevereiro","marco","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro")
+
+df.anova<-data.frame(observacoes = c(jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez),
+                     mes = rep (rotulo_m, each =5160, times =1))
+
+```
+
+__Teste de premissas da ANOVA__
+
+```
+#teste de normalidade dos residuos
+
+qqPlot(df.anova$observacoes)
+
+```
+[Resultado:](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss5.png) Os dados não- apresentam distribuição normal, uma vez que os resíduos não estão plotados sobre a linha esperada para uma distribuição normal. No entanto, o tamanho da amostra permite que este pressuposto não seja atendido.
+
+```
+#ANOVA
+modelo<-aov(observacoes ~ mes, data = df.anova)
+summary(modelo)
+
+```
+
+Resultado: Para este projeto será considerado como significativo um teste cujo valor de p seja inferior à __0,05%__. Como pode se observar, o valor de p encontra-se em um nível de signifância muito inferior a 0,05%, e que, assim, pelo menos um dos pares de meses apresenta diferença entre suas médias no IGR.
+
+![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss6.png)
+
+Agora será aplicado o teste _post-hoc_ de _Tukey_ que retornará uma matriz entre os meses que apresentam diferença signifcativa entre si.
+
+```
+#teste post-hoc para identificar quais pares apresentam diferença
+
+TukeyHSD(modelo)
+
+#exportando resultados post-hoc
+resultado<-TukeyHSD(modelo)
+resultado<-as.data.frame(resultado$mes)
+write.csv(resultado,"alex/tukey_test.csv", row.names = FALSE)
+```
+Resultado: Após exportar para um formato possível de ler no excel, através do uso de filtros na coluna de significância (igual ou inferior a 0,05%), foi possível observar quais meses apresentaram diferença signifcativa entre si.
+
+![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss7.png)
+
+Ao avaliar a interssecionalidade dos pares que apresentam diferença entre si e os que não apresentam, distribuí os meses em três grupos: __A__, __AB__ e __B__. O grupo A corresponde aos meses em que há menos reclamações no ano; o grupo AB representam meses intermediários, podendo se diferenciar tanto de alguns meses do grupo A quanto de B e o grupo B correspondem aos meses de maiores índices de reclamação no ano, conforme visto na tabela a seguir:
+
+| Mês              | Grupo |
+|------------------|-------|
+| Janeiro          |  A    |
+| Fevereiro        |  A    | 
+| Março            |  A    |
+| Abril            |  A    |
+| Maio             |  A    |
+| Junho            |  A    |
+| Julho            |  AB   | 
+| Agosto           |  B    |
+| Setembro         | B     |
+| Outubro          | B     |
+| Novembro         |  AB   | 
+| Dezembro         |  A    |
+
+------
+## 6. Produto
+
+Para visualizar com mais clareza o comportamento dos valores médios avaliados na análise estatística, elaborei um gráfico em colunas através do RStudio que evidenciasse os três grupos detectados, plotados juntos de seus respectivos intervalos de confiança (95%).
+
+```
+#avaliar os pares que diferenciam a nivel de significancia = 95%
+-excel-
+
+##criando intervalo de confiança (95%)
+
+fatores <- unique(df.anova$mes)
+data.bp <- data.frame(matrix(nrow = length(fatores), ncol = 4))
+for (i in 1:length(fatores)){
+  media <- mean(df.anova$observacoes[df.anova$mes == fatores[i]])
+  dp <- sd(df.anova$observacoes[df.anova$mes == fatores[i]])
+  n <- length(df.anova$observacoes[df.anova$mes == fatores[i]])
+  ep <- sd(df.anova$observacoes[df.anova$mes == fatores[i]]) /
+  sqrt(length(df.anova$observacoes[df.anova$mes == fatores[i]]))
+  alpha = 0.05
+  t = qt((1 - alpha) / 2 + 0.5, length(df.anova$observacoes[df.anova$mes == fatores[i]]) - 1)
+  ci = t * ep
+  lower <- media - ci
+  upper <- media + ci
+  data.bp[i, 2:4] <- data.frame(media, lower, upper)
+}
+
+data.bp[, 1] <- fatores
+names(data.bp) <- c('meses', 'media', 'lower', 'upper')
+head(data.bp)
+
+
+#convetendo a coluna "Meses" de texto para fator
+
+data.bp$meses<-factor(data.bp$meses, levels = c("Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"))
+#a primeira coluna perde seus dados originais, apesar dos fatores estarem ordenados. deve-se agora substituir os NA com os valores de rótulo adequados
+
+data.bp$meses<-replace(data.bp$meses,1:12,c("Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"))
+summary(data.bp$meses)
+
+##plotando
+
+library(ggplot2)
+graf1<-ggplot(data.bp) +
+     
+     geom_bar(aes(x = meses, y = media, fill = meses), stat = "identity") +
+     scale_y_continuous(breaks = seq(0,1.5,0.1), limits = c(0.0, 1.5)) +
+     coord_cartesian(ylim = c(1.2, 1.5)) +
+     geom_errorbar( aes(x = meses, ymin = lower, ymax= upper),
+                    width = 0.5, colour = "black") +
+     scale_fill_manual(values=c("gray", "gray", "gray", "gray","gray","gray","orange","blue","blue","blue","orange","gray")) +
+     labs(x = 'Meses', y = 'Média de reclamações/empresa') +
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), legend.position = 'none', 
+           axis.line = element_line(colour = "black"))
+
+
+```
+
+
+
+O resultado observado encontra-se a seguir:
+
+
+
+
+![](https://github.com/aa-dsci/ans-projeto/blob/main/ans-ss8.png)
+
